@@ -1,0 +1,72 @@
+- name: Populate service facts
+  service_facts:
+
+- name: stop possibly started minecraft service
+  systemd:
+    state: stopped
+    name: minecraft
+  when: "'minecraft.service' in services"
+
+- block:
+  - name: Capture files to delete
+    find:
+      paths: ~{{ubuntu_username}}/server
+      file_type: file
+      excludes: 
+        - "world"
+        - "world_the_end"
+        - "world_nether"
+    register: files_to_delete
+
+  - name: Delete files
+    file:
+      path: "{{ item.path }}"
+      state: absent
+    with_items: "{{ files_to_delete['files'] }}"
+  when: "'delete_worlds' not in ansible_run_tags"
+
+- name: Make sure server dir is empty
+  file:
+    state: absent
+    path: ~{{ubuntu_username}}/server
+  tags: [ never, delete_worlds ]
+
+- name: Create server folder
+  file: 
+    path: ~{{ubuntu_username}}/server
+    owner: "{{ubuntu_username}}"
+    group: "{{ubuntu_username}}" 
+    mode: 0755 
+    state: directory
+
+- name: Download paper server jar
+  script: "{{role_path}}/files/scripts/updater.py {{minecraft_version}}"
+  args:
+    executable: python3
+    chdir: /home/{{ubuntu_username}}/server
+
+- name: check for server jar
+  stat: 
+    path: ~{{ubuntu_username}}/server/paper_update.jar
+  register: server_jar
+
+- name: fail if jar does not exists
+  fail: msg="Failed to download the server jar"
+  when: server_jar.stat.exists == False
+
+- name: Chown to {{ubuntu_username}} 
+  file:
+    path: ~{{ubuntu_username}}/server/
+    state: directory
+    recurse: yes
+    owner: "{{ubuntu_username}}"
+    group: "{{ubuntu_username}}"
+
+- name: minecraft systemd unit file
+  template:
+    src: "{{role_path}}/files/minecraft.service"
+    dest: /etc/systemd/system/minecraft.service
+    mode: '0444'
+    owner: root
+    group: root
+

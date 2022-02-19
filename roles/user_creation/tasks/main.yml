@@ -1,0 +1,35 @@
+- name: Make sure we have a 'wheel' group
+  group:
+    name: wheel
+    state: present
+
+- name: Allow 'wheel' group to have passwordless sudo
+  lineinfile:
+    dest: /etc/sudoers
+    state: present
+    regexp: '^%wheel'
+    line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+    validate: 'visudo -cf %s'
+
+- name: Add sudoers users to wheel group
+  user:
+    name={{ubuntu_username}}
+    groups=wheel
+    append=yes
+
+- name: Create .ssh folder
+  file:
+    path: ~{{ubuntu_username}}/.ssh
+    state: directory
+    owner: "{{ubuntu_username}}"
+    group: "{{ubuntu_username}}"
+    mode: 0700
+
+- name: Copy SSH key from root
+  copy:
+    remote_src: yes
+    src: ~root/.ssh/authorized_keys
+    dest: ~{{ubuntu_username}}/.ssh/authorized_keys
+    owner: "{{ubuntu_username}}"
+    group: "{{ubuntu_username}}"
+    mode: 0600

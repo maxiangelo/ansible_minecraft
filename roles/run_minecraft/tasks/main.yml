@@ -1,0 +1,10 @@
+- name: start/enable minecraft service
+  systemd:
+    state: restarted
+    enabled: yes
+    daemon_reload: yes
+    name: minecraft
+  
+- name: Wait for Minecraft to start
+  wait_for:
+    port: 25565

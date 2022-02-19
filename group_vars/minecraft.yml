@@ -1,0 +1,4 @@
+minecraft_version: 1.18.1
+ubuntu_username: minecraft
+server_xms: 1G
+server_xmx: 1G

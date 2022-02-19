@@ -1,0 +1,22 @@
+
+- name: Install java for 1.17 and up
+  block:
+  - name: Install java for mc 1.17 and up
+    apt:
+      update_cache: yes
+      pkg: openjdk-17-jre 
+  - name: Set Java alternative to Java 17
+    shell:
+      cmd: update-java-alternatives --set /usr/lib/jvm/java-1.17.0-openjdk-amd64
+  when: minecraft_version is version('1.17', '>=')
+
+- name: Install java for below 1.17
+  block:
+  - name: Install java for below mc  1.17
+    apt:
+      update_cache: yes
+      pkg: openjdk-8-jre 
+  - name: Set Java alternative to Java 8
+    shell:
+      cmd: update-java-alternatives --set /usr/lib/jvm/java-1.8.0-openjdk-amd64
+  when: minecraft_version is version('1.17', '<')

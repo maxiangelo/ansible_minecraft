@@ -1,0 +1,2 @@
+[minecraft]
+YourIpHere ansible_ssh_user=root ansible_ssh_extra_args='-o StrictHostKeyChecking=no'
